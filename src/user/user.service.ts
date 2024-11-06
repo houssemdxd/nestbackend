@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,11 +11,14 @@ constructor(@InjectModel(User.name) private usermodel:Model<User>){}
 
 
 
-
-  create(createUserDto: CreateUserDto) {
-   const  usermodel = new  this.usermodel(createUserDto)
-   return usermodel.save()
-  }
+async create(createUserDto: CreateUserDto) {
+  const userModel = new  this.usermodel(createUserDto);
+  const savedUser = await userModel.save();
+  
+  return {
+    statusCode: HttpStatus.OK,
+    data: savedUser,  // This contains the saved user information
+  };}
 
   findAll() {
     return  this.usermodel.find().exec

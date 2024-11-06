@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -33,47 +34,60 @@ export class AuthService {
   ) {}
 
   async signup(signupData: SignupDto) {
-    const { email, password, name } = signupData;
-
-    //Check if email is in use
-    const emailInUse = await this.UserModel.findOne({
-      email,
-    });
+    const { email, password, name,roleId } = signupData;
+  
+    // Check if email is in use
+    const emailInUse = await this.UserModel.findOne({ email });
     if (emailInUse) {
       throw new BadRequestException('Email already in use');
     }
-    //Hash password
+  
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user document and save in mongodb
-    return await this.UserModel.create({
+  
+    // Create user document and save in MongoDB
+    const createdUser = await this.UserModel.create({
+      roleId,
       name,
       email,
       password: hashedPassword,
     });
+  
+    // Return the response with statusCode and user information
+    return {
+      statusCode: HttpStatus.OK,
+      data: createdUser,
+    };
   }
+
 
   async login(credentials: LoginDto) {
     const { email, password } = credentials;
-    //Find if user exists by email
+  
+    // Find if user exists by email
     const user = await this.UserModel.findOne({ email });
     if (!user) {
       throw new UnauthorizedException('Wrong credentials');
     }
-
-    //Compare entered password with existing password
+  
+    // Compare entered password with existing password
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       throw new UnauthorizedException('Wrong credentials');
     }
-
-    //Generate JWT tokens
+  
+    // Generate JWT tokens
     const tokens = await this.generateUserTokens(user._id);
+  
+    // Return response with statusCode and user information
     return {
-      ...tokens,
+      statusCode: HttpStatus.OK,
       userId: user._id,
+      ...tokens,
     };
   }
+
+
 
   async changePassword(userId, oldPassword: string, newPassword: string) {
     //Find the user

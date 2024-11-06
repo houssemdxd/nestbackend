@@ -12,9 +12,9 @@ export class CreateRoleDto {
   @IsString()
   name: string;
 
-  @ValidateNested()
+  /*@ValidateNested()
   @Type(() => Permission)
-  permissions: Permission[];
+  permissions: Permission[];*/
 }
 
 export class Permission {
